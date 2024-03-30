@@ -4,9 +4,9 @@ export function setSpritePosition(Sprite, position){
     Sprite.y = position[1];
 }
 
-export function SpriteInit(Sprite, animationSpeed, scale=0.5, anchor=0.5){
+export function SpriteInit(Sprite, animationSpeed=0.1, scale=0.5, anchor=0.5){
     //初始化动画速率、缩放、锚点
-    Sprite.animationSpeed = 0.1;
-    Sprite.scale.set(0.5);
-    Sprite.anchor.set(0.5);
+    Sprite.animationSpeed = animationSpeed;
+    Sprite.scale.set(scale);
+    Sprite.anchor.set(anchor);
 }

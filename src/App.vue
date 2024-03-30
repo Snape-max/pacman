@@ -4,31 +4,33 @@
 </template>
 
 <script setup>
-// import { astar } from './utils/astar';
+import { astar } from './utils/astar';
 
-//   // 假设我们有一个示例地图
-//   const exampleMap = [
-//     [1, 1, 1, 1, 1],
-//     [1, 0, 0, 0, 1],
-//     [1, 0, 1, 0, 1],
-//     [1, 0, 0, 0, 1],
-//     [1, 1, 1, 1, 1],
-//   ];
+  // // 假设我们有一个示例地图
+  // const exampleMap = [
+  //   [1, 1, 1, 1, 1],
+  //   [1, 0, 0, 0, 1],
+  //   [1, 0, 1, 0, 1],
+  //   [1, 0, 0, 0, 1],
+  //   [1, 1, 1, 1, 1],
+  // ];
   
-//   // 定义起始和结束坐标
-//   const start = [1, 1];
-//   const end = [3, 3];
-//   const result = astar(start, end, exampleMap);
-//   console.log(result);
+  // // 定义起始和结束坐标
+  // const start = [1, 1];
+  // const end = [3, 3];
+  // const result = astar(start, end, exampleMap);
+  // console.log(result);
 
-import { AnimatedSprite, Application, Assets, Container, Sprite, Texture} from 'pixi.js';
+import { AnimatedSprite, Application, Assets, Container, Sprite, Texture, v8_0_0} from 'pixi.js';
 import { setSpritePosition, SpriteInit} from './utils/sprite'
 
 
 var Mapstart = [100, 100];
 var beanBias = 0;
-var beanSpriteX = 225 + beanBias;
-var beanSpriteY = 375 + beanBias;
+var beanSpriteX = 25*9 + beanBias;
+var beanSpriteY = 25*15 + beanBias;
+var beanx = 9;
+var beany = 15;
 
 const app = new Application();
 const map = [
@@ -55,6 +57,9 @@ const map = [
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ]
 
+  // let road = astar([9,8],[1,3], map);
+  // console.log(road);
+
     const maps = [
         [4, 1, 1, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 5],
         [2, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 2],
@@ -80,7 +85,6 @@ const map = [
     ]
 
     console.log(map);
-    
 
 async function init(){
   
@@ -92,7 +96,6 @@ async function init(){
 
 
   game_main.appendChild(app.canvas);
-  console.log(maps)
   let MapSpriteArray = [];
   for (let i=0;i<= 26;i++){
     const teture = await Assets.load(`./assets/map/map${i}.png`);
@@ -111,7 +114,11 @@ async function init(){
     }
   }
 
-  addCharacter();
+  
+
+
+  await addCharacter();
+  addGhost();
 
 
 
@@ -123,19 +130,13 @@ async function init(){
 
 async function addCharacter(){
   let beanImages = ["./assets/bean/bean-re1.png", "./assets/bean/bean-re2.png"];
-  let blueGhostImages = ["./assets/ghost-blue/ghost1.png", "./assets/ghost-blue/ghost2.png", "./assets/ghost-blue/ghost3.png"];
-  let greenGhostImages = ["./assets/ghost-green/ghost1.png", "./assets/ghost-green/ghost2.png", "./assets/ghost-green/ghost3.png"];
-  let pinkGhostImages = ["./assets/ghost-pink/ghost1.png", "./assets/ghost-pink/ghost2.png", "./assets/ghost-pink/ghost3.png"];
-  let redGhostImages = ["./assets/ghost-red/ghost1.png", "./assets/ghost-red/ghost2.png", "./assets/ghost-red/ghost3.png"];
   let beanSprite = await CreateAnimatedSprite(beanImages);
-  SpriteInit(beanSprite, 0.1, 0.5, 1);
+  SpriteInit(beanSprite);
   setSpritePosition(beanSprite, [Mapstart[0] + beanSpriteX, Mapstart[1] + beanSpriteY]);
   beanSprite.play();
   app.stage.addChild(beanSprite);
-
   // 定义速度变量
-  let velocityX = 0.5;
-  let velocityY = 0.5;
+
   let speed = 0.5;
   let beandirection = 0;
   let beanflip = 0.5;
@@ -147,134 +148,197 @@ async function addCharacter(){
       switch (event.key) {
           case 'w':
               nextDirection = 4;
+              beanflip = 0.5;
+              beandirection = 3*Math.PI/2;
               break;
           case 'a':
               nextDirection = 3;
+              beanflip = -0.5;
+              beandirection = 0;
               break;
           case 's':
               nextDirection = 2
+              beanflip = 0.5;
+              beandirection = Math.PI/2;
               break;
           case 'd':
               nextDirection = 1;
+              beanflip = 0.5;
+              beandirection = 0;
               break;
       }
   }
 
-  let loc = NaN;
-  let next = NaN;
+  let loc = {
+    x:0,
+    y:0,
+  };
+  let tempx, tempy = 0;
   let nowDirextion = 1;
   // 每一帧更新渲染
   app.ticker.add(() => {
-    loc = {
-      x: Math.floor((beanSprite.x - Mapstart[0])/25),
-      y: Math.floor((beanSprite.y - Mapstart[1])/25),
-    };
-    next = {
-      w: !map[loc.y-1][loc.x],
-      a: !map[loc.y][loc.x-1],
-      s: !map[loc.y+1][loc.x],
-      d: !map[loc.y][loc.x+1],
-    };
-    if(next.w && nextDirection == 4){
-      if(beanSprite.y <= loc.y*25 + Mapstart[1]){
-        beanSprite.y -= velocityY;
-        beandirection = 3*Math.PI/2;
-        beanflip = 0.5;
-        nowDirextion = nextDirection;
-      } else {
-        switch(nowDirextion){
-          case 1:
-            beanSprite.x += velocityX;
-            break;
-          case 2:
-            beanSprite.y += velocityY;
-            break;
-          case 3:
-            beanSprite.x -= velocityX;
-            break;
-          case 4:
-            beanSprite.y -= velocityY;
-            break;
-        }
-      }
-    }else if(next.a && nextDirection == 3){
-      if(beanSprite.x >= loc.x*25 + Mapstart[0]){
-        beanSprite.x -= velocityX;
 
-        beandirection = 0;
-        beanflip = -0.5;
-        nowDirextion = nextDirection;
-
-      } else {
-        switch(nowDirextion){
-          case 1:
-            beanSprite.x += velocityX;
-            break;
-          case 2:
-            beanSprite.y += velocityY;
-            break;
-          case 3:
-            beanSprite.x -= velocityX;
-            break;
-          case 4:
-            beanSprite.y -= velocityY;
-            break;
-        }
-      }
-    }else if(next.s && nextDirection == 2){
-      if(beanSprite.y >= loc.y*25 + Mapstart[1]){
-        beanSprite.y += velocityY;
-
-        beandirection = Math.PI/2;
-        beanflip = 0.5;
-        nowDirextion = nextDirection;
-      } else {
-        switch(nowDirextion){
-          case 1:
-            beanSprite.x += velocityX;
-            break;
-          case 2:
-            beanSprite.y += velocityY;
-            break;
-          case 3:
-            beanSprite.x -= velocityX;
-            break;
-          case 4:
-            beanSprite.y -= velocityY;
-            break;
-        }
-      }
-    }else if(next.d && nextDirection == 1){
-      if(beanSprite.x >= loc.x*25 + Mapstart[0]){
-        beanSprite.x += velocityX;
-        beandirection = 0;
-        beanflip = 0.5;
-        nowDirextion = nextDirection;
-      } else {
-        switch(nowDirextion){
-          case 1:
-            beanSprite.x += velocityX;
-            break;
-          case 2:
-            beanSprite.y += velocityY;
-            break;
-          case 3:
-            beanSprite.x -= velocityX;
-            break;
-          case 4:
-            beanSprite.y -= velocityY;
-            break;
-        }
-      }
+    if(beanSprite.x > Mapstart[0] + 18*25){
+      beanSprite.x = Mapstart[0];
+    }
+    if(beanSprite.y > Mapstart[1] + 20*25){
+      beanSprite.y = Mapstart[1];
+    }
+    if(beanSprite.x < Mapstart[0]){
+      beanSprite.x = Mapstart[0]  + 18*25;
+    }
+    if(beanSprite.y < Mapstart[1]){
+      beanSprite.y = Mapstart[1]  + 20*25;
     }
 
 
-    beanSprite.rotation = beandirection;
-    beanSprite.scale._x = beanflip;
+    switch(nowDirextion){
+      case 1:
+        tempx = beanSprite.x + speed;
+        tempy = beanSprite.y;
+        loc.x = Math.floor((tempx - Mapstart[0])/25);
+        loc.y = Math.floor((tempy - Mapstart[0])/25);
+        if (!map[loc.y][loc.x+1]){
+          beanSprite.x += speed;
+          beanSprite.rotation = beandirection;
+          beanSprite.scale._x = beanflip;
+        } else {
+          beanSprite.x = loc.x*25+Mapstart[0];
+          beanSprite.y = loc.y*25+Mapstart[1];
+        }
+        break;
+      case 2:
+        tempx = beanSprite.x;
+        tempy = beanSprite.y  + speed;
+        loc.x = Math.floor((tempx - Mapstart[0])/25);
+        loc.y = Math.floor((tempy - Mapstart[0])/25);
+        if (!map[loc.y+1][loc.x]){
+          beanSprite.y += speed;
+          beanSprite.rotation = beandirection;
+          beanSprite.scale._x = beanflip;
+        }else {
+          beanSprite.x = loc.x*25+Mapstart[0];
+          beanSprite.y = loc.y*25+Mapstart[1];
+        }
+        break;
+      case 3:
+        tempx = beanSprite.x - speed;
+        tempy = beanSprite.y;
+        loc.x = Math.floor((tempx - Mapstart[0])/25);
+        loc.y = Math.floor((tempy - Mapstart[0])/25);
+        if (!map[loc.y][loc.x]){
+          beanSprite.x -= speed;
+          beanSprite.rotation = beandirection;
+          beanSprite.scale._x = beanflip;
+        }else {
+          beanSprite.x = (loc.x + 1)*25+Mapstart[0];
+          beanSprite.y = loc.y*25+Mapstart[1];
+        }
+        break;
+      case 4:
+        tempx = beanSprite.x;
+        tempy = beanSprite.y  - speed;
+        loc.x = Math.floor((tempx - Mapstart[0])/25);
+        loc.y = Math.floor((tempy - Mapstart[0])/25);
+        if (!map[loc.y][loc.x]){
+          beanSprite.rotation = beandirection;
+          beanSprite.scale._x = beanflip;
+          beanSprite.y -= speed;
+        }else {
+          beanSprite.x = loc.x*25+Mapstart[0];
+          beanSprite.y = (loc.y+1) *25+Mapstart[1];
+        }
+        break;
+    }
 
-
+    if (((beanSprite.x - Mapstart[0])%25 == 0) && ((beanSprite.y - Mapstart[1])%25 == 0)){
+          nowDirextion = nextDirection;
+    }
+    beanx =  Math.floor((beanSprite.x - Mapstart[0])/25);
+    beany = Math.floor((beanSprite.y - Mapstart[0])/25);
   });
 }
+
+
+let GhostSpeed = 0.5;
+let accumulator = 0;
+async function addGhost(){
+
+  let blueGhostImages = ["./assets/ghost-blue/ghost1.png", "./assets/ghost-blue/ghost2.png", "./assets/ghost-blue/ghost3.png"];
+  let greenGhostImages = ["./assets/ghost-green/ghost1.png", "./assets/ghost-green/ghost2.png", "./assets/ghost-green/ghost3.png"];
+  let pinkGhostImages = ["./assets/ghost-pink/ghost1.png", "./assets/ghost-pink/ghost2.png", "./assets/ghost-pink/ghost3.png"];
+  let redGhostImages = ["./assets/ghost-red/ghost1.png", "./assets/ghost-red/ghost2.png", "./assets/ghost-red/ghost3.png"];
+
+  let blueGhost = await CreateAnimatedSprite(blueGhostImages);
+  let greenGhost = await CreateAnimatedSprite(greenGhostImages);
+  let pinkGhost = await CreateAnimatedSprite(pinkGhostImages);
+  let redGhost = await CreateAnimatedSprite(redGhostImages);
+  SpriteInit(blueGhost);
+  SpriteInit(greenGhost);
+  SpriteInit(pinkGhost);
+  SpriteInit(redGhost);
+  setSpritePosition(blueGhost, [Mapstart[0] + 25*8, Mapstart[1] + 25*9]);
+  setSpritePosition(greenGhost, [Mapstart[0] + 25*9, Mapstart[1] + 25*9]);
+  setSpritePosition(pinkGhost, [Mapstart[0] + 25*10, Mapstart[1] + 25*9]);
+  setSpritePosition(redGhost, [Mapstart[0] + 25*9, Mapstart[1] + 25*8]);
+  blueGhost.play();
+  greenGhost.play();
+  pinkGhost.play();
+  redGhost.play();
+  app.stage.addChild(blueGhost);
+  app.stage.addChild(greenGhost);
+  app.stage.addChild(pinkGhost);
+  app.stage.addChild(redGhost);
+
+  let road = astar([9,8],[beanx,beany], map);
+  console.log(road);
+
+  let i = 0;
+  let redGhostx = 0;
+  let redGhosty = 0;
+  app.ticker.add((deltaTime) =>{
+   
+    
+    redGhostx = redGhost.x-Mapstart[0]
+    redGhosty = redGhost.y-Mapstart[1];
+
+    let nextPosition = road[i];
+
+
+
+    if((redGhostx != nextPosition[0]*25) || (redGhosty != nextPosition[1]*25)){
+      if(nextPosition[0]*25 - redGhostx > 0){
+        redGhost.x += GhostSpeed;
+      } else if(nextPosition[0]*25 - redGhostx < 0){
+        redGhost.x -= GhostSpeed;
+      } else if(nextPosition[1]*25 - redGhosty > 0){
+        redGhost.y += GhostSpeed;
+      } else if(nextPosition[1]*25 - redGhosty < 0){
+        redGhost.y -= GhostSpeed;
+      }
+    } else {
+      if(i < road.length-1){
+        i = i + 1;
+      } else {
+        let currentGoastx = Math.floor(redGhostx/25);
+        let currentGoasty = Math.floor(redGhosty/25);
+        console.log([[currentGoastx,currentGoasty],[beanx,beany]])
+        road = astar([currentGoastx,currentGoasty],[beanx,beany], map);
+        console.log(road);
+        i = 0;
+      }
+    }
+
+  
+
+  
+  
+  });
+
+
+}
+
+
 
 init(); 
 

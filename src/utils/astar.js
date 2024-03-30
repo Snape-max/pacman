@@ -1,189 +1,149 @@
-export function astar(from, to, map){
+//其中的MAP.arr是二维数组
+export function astar(from,to,map){
 
-    let mapy = map.length;
-    let mapx = map[0].length;
-    //console.log(`${mapx}, ${mapy}`);
-    let to_index = loc2index(to, mapx, mapy);
-    let open = new PriorityQueue();
-    open.enqueue(loc2index(from, mapx, mapy), dis(from, to));
-    let close = new Array();
-    let findex = new Array(mapx * mapy);
+  let start_x = from[1];
+  let start_y = from[0];
 
-    
+  let end_x = to[1];
+  let end_y = to[0];
 
-    while (open.size() != 0){
-        let current_node_index = open.dequeue();
-        //console.log(current_node_index)
-        close.push(current_node_index);
-
-        if(current_node_index == to_index){
-            break;
-        }
-
-        let current_node_loc = index2loc(current_node_index, mapx, mapy);
-        
-        let move = [[1,0],[-1,0],[0,1],[0,-1]];
-
-        //console.log(current_node_loc);
-        for(let i=0;i<4;i++){
-            let temp_node_loc = [current_node_loc[0]+move[i][0], current_node_loc[1] + move[i][1]];
-            //console.log(temp_node_loc);
-            let temp_node_index = loc2index(temp_node_loc, mapx, mapy);
-            if (isvaild(temp_node_loc, map)){
-              if (!open.contains(temp_node_index)) {
-                if (close.indexOf(temp_node_index) == -1) {
-                    open.enqueue(temp_node_index, dis(temp_node_loc, to));
-                    findex[temp_node_index] = current_node_index;
-                }
-            }
-            }
-        }
-
-
-    }
-
-    //console.log(findex);
-    //console.log(findex[to_index]);
-    if (findex[to_index] == undefined){
-      return [];
-    }
-
-    let route = [];
-    let node = to_index;
-    route.unshift(to);
-    let from_index = loc2index(from, mapx, mapy)
-    //console.log(from);
-    //console.log(from_index);
-    //console.log(findex);
-    while(findex[node] != from_index){
-        route.unshift(index2loc(findex[node], mapx, mapy));
-        node = findex[node];
-    }
-
-    route.unshift(from);
-
-    return route;
-
-}
-
-
-function loc2index(loc, mapx, mapy){
-
-    return loc[0]*mapx+loc[1];
-
-}
-
-function index2loc(index, mapx, mapy){
-
-    let x = Math.floor(index/mapx); 
-    let y = index % mapy;
-
-    return [x, y];
-}
-
-function isvaild(loc, map){
-
-    let x = loc[0];
-    let y = loc[1];
-
-    let mapy = map.length;
-    let mapx = map[0].length;
-
-    if ((x <= mapx) && (y <= mapy) && (x >= 0) && (y >= 0)){
-
-        if(map[x][y]){
-            return false;
-        } else {
-            return true;
-        }
-
-    } else {
-        return false;
-    }
-
-}
-
-function dis(xy1, xy2){
-    return Math.abs(xy1[0] - xy2[0]) + Math.abs(xy1[1] - xy2[1]);
-}
-
-class PriorityQueue {
-    constructor() {
-      this.heap = [];
-    }
-  
-    enqueue(element, priority) {
-      const node = { value: element, priority };
-      this.heap.push(node);
-      this.bubbleUp(this.heap.length - 1);
-    }
-  
-    bubbleUp(index) {
-      while (index > 0) {
-        const parentIndex = Math.floor((index - 1) / 2);
-        if (this.heap[parentIndex].priority >= this.heap[index].priority) break;
-        [this.heap[parentIndex], this.heap[index]] = [this.heap[index], this.heap[parentIndex]];
-        index = parentIndex;
-      }
-    }
-  
-    dequeue() {
-      if (this.heap.length === 0) throw new Error('Queue is empty');
-      const maxNode = this.heap[0];
-      const endNode = this.heap.pop();
-      if (this.heap.length > 0) {
-        this.heap[0] = endNode;
-        this.bubbleDown(0);
-      }
-      return maxNode.value;
-    }
-  
-    bubbleDown(index) {
-      let leftChildIndex = 2 * index + 1;
-      let rightChildIndex = 2 * index + 2;
-      let largestChildIndex = index;
-  
-      if (leftChildIndex < this.heap.length && this.heap[leftChildIndex].priority > this.heap[largestChildIndex].priority) {
-        largestChildIndex = leftChildIndex;
-      }
-  
-      if (rightChildIndex < this.heap.length && this.heap[rightChildIndex].priority > this.heap[largestChildIndex].priority) {
-        largestChildIndex = rightChildIndex;
-      }
-  
-      if (largestChildIndex !== index) {
-        [this.heap[index], this.heap[largestChildIndex]] = [this.heap[largestChildIndex], this.heap[index]];
-        this.bubbleDown(largestChildIndex);
-      }
-    }
-
-    contains(element) {
-        for (let i = 0; i < this.heap.length; i++) {
-          if (this.heap[i].value === element) {
-            return true;
-          }
-        }
-        return false;
-    }
-
-    size() {
-        return this.heap.length;
-    }
+  let MAP = {
+    arr: map,
+    rows: map.length,
+    cols: map[0].length,
   }
 
+  var openList=[],    //开启列表
+      closeList=[],   //关闭列表
+      result=[],      //结果数组
+      result_index;   //结果数组在开启列表中的序号
 
-  // // 假设我们有一个示例地图
-  // const exampleMap = [
-  //   [1, 1, 1, 1, 1],
-  //   [1, 0, 0, 0, 1],
-  //   [1, 0, 1, 0, 1],
-  //   [1, 0, 0, 1, 1],
-  //   [1, 1, 1, 1, 1],
-  // ];
-  
-  // // 定义起始和结束坐标
-  // const start = [1, 1];
-  // const end = [3, 3];
-  // const result = astar(start, end, exampleMap);
-  // console.log(result);
-  
+  openList.push({x:start_x,y:start_y,G:0});//把当前点加入到开启列表中，并且G是0
+
+  do{
+      var currentPoint = openList.pop();
+      closeList.push(currentPoint);
+      var surroundPoint=SurroundPoint(currentPoint);
+      for(var i in surroundPoint) {
+          var item = surroundPoint[i];                //获得周围的八个点
+          if (
+              item.x>=0 &&                            //判断是否在地图上
+              item.y>=0 &&
+              item.x<MAP.rows &&
+              item.y<MAP.cols &&
+              MAP.arr[item.x][item.y] != 1 &&         //判断是否是障碍物
+              !existList(item, closeList) &&          //判断是否在关闭列表中
+              MAP.arr[item.x][currentPoint.y]!=1 &&   //判断之间是否有障碍物，如果有障碍物是过不去的
+              MAP.arr[currentPoint.x][item.y]!=1) {
+              //g 到父节点的位置
+              //如果是上下左右位置的则g等于10，斜对角的就是14
+              var g = currentPoint.G + ((currentPoint.x - item.x) * (currentPoint.y - item.y) == 0 ? 10 : 14);
+              if (!existList(item, openList)) {       //如果不在开启列表中
+                  //计算H，通过水平和垂直距离进行确定
+                  item['H'] = Math.abs(end_x - item.x) * 10 + Math.abs(end_y - item.y) * 10;
+                  item['G'] = g;
+                  item['F'] = item.H + item.G;
+                  item['parent'] = currentPoint;
+                  openList.push(item);
+              }
+              else {                                  //存在在开启列表中，比较目前的g值和之前的g的大小
+                  var index = existList(item, openList);
+                  //如果当前点的g更小
+                  if (g < openList[index].G) {
+                      openList[index].parent = currentPoint;
+                      openList[index].G = g;
+                      openList[index].F=g+openList[index].H;
+                  }
+
+              }
+          }
+      }
+      //如果开启列表空了，没有通路，结果为空
+      if(openList.length==0) {
+          break;
+      }
+      openList.sort(sortF);//这一步是为了循环回去的时候，找出 F 值最小的, 将它从 "开启列表" 中移掉
+  }while(!(result_index=existList({x:end_x,y:end_y},openList)));
+
+  //判断结果列表是否为空
+  if(!result_index) {
+      result=[];
+  }
+  else {
+    var currentObj=openList[result_index];
+    do{
+        //把路劲节点添加到result当中
+        result.unshift([
+            currentObj.y,
+            currentObj.x
+        ]);
+        currentObj=currentObj.parent;
+    }while (currentObj.x!=start_x || currentObj.y!=start_y);
+
+  }
+  result.unshift([
+    start_y,
+    start_x
+  ])
+  return result;
+
+}
+//用F值对数组排序
+function sortF(a,b){
+  return b.F- a.F;
+}
+//获取周围八个点的值
+function SurroundPoint(curPoint){
+  var x=curPoint.x,y=curPoint.y;
+  return [
+      {x:x-1,y:y-1},
+      {x:x,y:y-1},
+      {x:x+1,y:y-1},
+      {x:x+1,y:y},
+      {x:x+1,y:y+1},
+      {x:x,y:y+1},
+      {x:x-1,y:y+1},
+      {x:x-1,y:y}
+  ]
+}
+//判断点是否存在在列表中，是的话返回的是序列号
+function existList(point,list) {
+  for(var i in list) {
+      if(point.x==list[i].x && point.y==list[i].y) {
+          return i;
+      }
+  }
+  return false;
+}
+
+
+
+
+
+// const map = [
+//   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+//   [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+//   [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
+//   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+//   [1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
+//   [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+//   [1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1],
+//   [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+//   [1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1],
+//   [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+//   [1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1],
+//   [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+//   [1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1],
+//   [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+//   [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
+//   [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+//   [1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1],
+//   [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+//   [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+//   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+//   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+// ]
+
+// let road = astar([9,15],[14,16], map);
+// console.log(road);
+
