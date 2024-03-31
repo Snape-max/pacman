@@ -34,7 +34,7 @@ var beanSpriteX = 25*9;
 var beanSpriteY = 25*15;
 var beanLocx = 9;
 var beanLocy = 15;
-let GhostSpeed = 0.55;
+let GhostSpeed = [0.55, 0.40, 0.45, 0.56];
 let score = 0;
 var pause = false;
 var life = 4;
@@ -42,7 +42,7 @@ var gameStart = false;
 var gameOver = false;
 var pacmanFlag = false;
 var ghostFlag = false;
-
+var isWin = false;
 
 
 
@@ -91,7 +91,7 @@ const map = [
 
 const maps = [
     [4, 1, 1, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 5],
-    [2, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 29, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 29, 2],
     [2, 0, 23, 22, 0, 23, 21, 22, 0, 14, 0, 23, 21, 22, 0, 23, 22, 0, 2],
     [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
     [2, 0, 15, 16, 0, 13, 0, 15, 11, 17, 11, 16, 0, 13, 0, 15, 16, 0, 2],
@@ -109,7 +109,7 @@ const maps = [
     [9, 16, 0, 14, 0, 13, 0, 15, 11, 17, 11, 16, 0, 13, 0, 14, 0, 15, 8],
     [2, 0, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 0, 2],
     [2, 0, 15, 11, 11, 19, 11, 16, 0, 14, 0, 15, 11, 19, 11, 11, 16, 0, 2],
-    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 2],
     [6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 7],
 ]
 
@@ -174,12 +174,24 @@ async function init(){
     MapTexture.push(teture);
   }
 
+
+
   //拼接地图, 并生成精灵表
   for (let i=0;i<maps.length;i++){
     let tempMapSpriteRows = [];
     for(let j=0;j<maps[0].length;j++){
+      let x = maps[i][j];
+      let tempSprite;
+      if (x == 29){
+        tempSprite = new AnimatedSprite([MapTexture[0], MapTexture[27]]);
+        tempSprite.animationSpeed = 0.1;
+        tempSprite.play();
+      } else{
+
+        tempSprite = new Sprite(MapTexture[x]);
       
-      const tempSprite = new Sprite(MapTexture[maps[i][j]]);
+      }
+      
       tempMapSpriteRows.push(tempSprite);
       tempSprite.anchor.set(0.5);
       tempSprite.x = Mapstart[0] + j*25;
@@ -273,7 +285,7 @@ async function init(){
       initcnt++;
     }
 
-    if(gameOver){
+    if(gameOver && !isWin){
       blackSprie.alpha = 1;
       initText.text = "GAME OVER";
       hintText.text = `SCORE  :  ${score}`;
@@ -281,17 +293,32 @@ async function init(){
       hintText.alpha = 1;
     }
 
+    if(isWin){
+      gameOver = true;
+      blackSprie.alpha = 1;
+      initText.text = "YOU WIN!";
+      hintText.text = `SCORE  :  ${score}`;
+      initText.alpha = 1;
+      hintText.alpha = 1;
+    }
+
     let beanCeilx = Math.round((beanSpriteX)/25);
     let beanCeily = Math.round((beanSpriteY)/25);
-    if(maps[beanCeily][beanCeilx] == 0){
-      GhostSpeed = 0.55;
-      MapSpriteArray[beanCeily][beanCeilx].texture = MapTexture[28];
+    if(maps[beanCeily][beanCeilx] == 0 || maps[beanCeily][beanCeilx] == 29){
+      //GhostSpeed = 0.55;
+      MapSpriteArray[beanCeily][beanCeilx].alpha = 0;
 
+      if (maps[beanCeily][beanCeilx] == 0){
+        score++;
+      } else {
+        score += 10;
+      }
       maps[beanCeily][beanCeilx] = 28;
-      score++;
+      
+
 
     } else {
-      GhostSpeed = 0.45;
+      //GhostSpeed = 0.45;
     }
 
     //碰撞判定以及游戏结束判定
@@ -327,6 +354,10 @@ async function init(){
       }
     } else {
       text3.text = "";
+    }
+
+    if (score == 221){
+      isWin = true;
     }
 
 
@@ -503,7 +534,7 @@ async function addGhost(){
   let greenGhost = await CreateAnimatedSprite(greenGhostImages);
   let pinkGhost = await CreateAnimatedSprite(pinkGhostImages);
   let redGhost = await CreateAnimatedSprite(redGhostImages);
-  let GhostSpriteArray = [blueGhost, greenGhost, pinkGhost, redGhost];
+  let GhostSpriteArray = [redGhost, greenGhost, pinkGhost, blueGhost];
 
 
   
@@ -568,13 +599,13 @@ async function addGhost(){
         if((Math.floor(tempGhostX) != nextPosition[0]*25) || (Math.floor(tempGhostY) != nextPosition[1]*25)){
 
           if(nextPosition[0]*25 - tempGhostX > 0){
-            tempGhost.x += GhostSpeed;
+            tempGhost.x += GhostSpeed[index];
           } else if(nextPosition[0]*25 - tempGhostX < 0){
-            tempGhost.x -= GhostSpeed;
+            tempGhost.x -= GhostSpeed[index];
           } else if(nextPosition[1]*25 - tempGhostY > 0){
-            tempGhost.y += GhostSpeed;
+            tempGhost.y += GhostSpeed[index];
           } else if(nextPosition[1]*25 - tempGhostY < 0){
-            tempGhost.y -= GhostSpeed;
+            tempGhost.y -= GhostSpeed[index];
           }
         } else {
 
@@ -614,17 +645,7 @@ async function CreateAnimatedSprite(sources){
   return new AnimatedSprite(tempTextureArray);
 }
 
-function hitTestRectangle(spriteA, spriteB) {
-  var ans = false;
-  spriteB.forEach((item, index) => {
-    var boundsA = spriteA.getBounds();
-    var boundsB = spriteB[index].getBounds();
-    console.log(boundsA.intersects(boundsB));
-    ans = boundsA.intersects(boundsB);
-  })
 
-  return ans;
-}
 
 function hit(spriteALoc, spriteLocArray){
   let ans = false;
