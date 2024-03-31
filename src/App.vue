@@ -168,6 +168,13 @@ async function init(){
   hintText.anchor.set(0.5);
   app.stage.addChild(hintText);
 
+  let author = new Text({ text: 'https://github.com/Snape-max/pacman', style: { fontFamily: 'bitt', fontSize: 30, fill: "white"} });
+  author.zIndex = 11;
+  author.x = viewportWidth;
+  author.y = viewportHeight - 10;
+  author.anchor.set(1);
+  app.stage.addChild(author);
+
   //加载贴图
   for (let i=0;i< 29;i++){
     const teture = await Assets.load(`./assets/map/map${i}.png`);
@@ -184,7 +191,7 @@ async function init(){
       let tempSprite;
       if (x == 29){
         tempSprite = new AnimatedSprite([MapTexture[0], MapTexture[27]]);
-        tempSprite.animationSpeed = 0.1;
+        tempSprite.animationSpeed = 0.03;
         tempSprite.play();
       } else{
 
