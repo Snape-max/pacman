@@ -1,4 +1,4 @@
-# astar
+# Pacman - 吃豆人小游戏复刻
 
 ## Project setup
 ```
