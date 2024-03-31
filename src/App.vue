@@ -21,7 +21,7 @@ import { astar } from './utils/astar';
   // const result = astar(start, end, exampleMap);
   // console.log(result);
 
-import { AnimatedSprite, Application, Assets, Container, Sprite, Texture, v8_0_0} from 'pixi.js';
+import { AnimatedSprite, Application, Assets, Sprite, Texture, Text} from 'pixi.js';
 import { setSpritePosition, SpriteInit} from './utils/sprite'
 
 
@@ -29,8 +29,10 @@ var Mapstart = [100, 100];
 var beanBias = 0;
 var beanSpriteX = 25*9 + beanBias;
 var beanSpriteY = 25*15 + beanBias;
-var beanx = 9;
-var beany = 15;
+var beanLocx = 9;
+var beanLocy = 15;
+let GhostSpeed = 0.55;
+let score = 0;
 
 const app = new Application();
 const map = [
@@ -60,31 +62,33 @@ const map = [
   // let road = astar([9,8],[1,3], map);
   // console.log(road);
 
-    const maps = [
-        [4, 1, 1, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 5],
-        [2, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-        [2, 0, 23, 22, 0, 23, 21, 22, 0, 14, 0, 23, 21, 22, 0, 23, 22, 0, 2],
-        [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-        [2, 0, 15, 16, 0, 13, 0, 15, 11, 17, 11, 16, 0, 13, 0, 15, 16, 0, 2],
-        [2, 0, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 0, 2],
-        [6, 1, 1, 5, 0, 18, 11, 16, 0, 14, 0, 15, 11, 20, 0, 4, 1, 1, 7],
-        [28, 28, 28, 2, 0, 12, 0, 0, 0, 0, 0, 0, 0, 12, 0, 2, 28, 28, 28],
-        [3, 1, 1, 7, 0, 14, 0, 4, 24, 0, 3, 5, 0, 14, 0, 6, 1, 1, 24],
-        [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
-        [3, 1, 1, 5, 0, 13, 0, 6, 1, 1, 1, 7, 0, 13, 0, 4, 1, 1, 24],
-        [28, 28, 28, 2, 0, 12, 0, 0, 0, 0, 0, 0, 0, 12, 0, 2, 28, 28, 28],
-        [4, 1, 1, 7, 0, 14, 0, 15, 11, 17, 11, 16, 0, 14, 0, 6, 1, 1, 5],
-        [2, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-        [2, 0, 15, 25, 0, 15, 11, 16, 0, 14, 0, 15, 11, 16, 0, 26, 16, 0, 2],
-        [2, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 2],
-        [9, 16, 0, 14, 0, 13, 0, 15, 11, 17, 11, 16, 0, 13, 0, 14, 0, 15, 8],
-        [2, 0, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 0, 2],
-        [2, 0, 15, 11, 11, 19, 11, 16, 0, 14, 0, 15, 11, 19, 11, 11, 16, 0, 2],
-        [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-        [6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 7],
-    ]
+const maps = [
+    [4, 1, 1, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 5],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 0, 23, 22, 0, 23, 21, 22, 0, 14, 0, 23, 21, 22, 0, 23, 22, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 0, 15, 16, 0, 13, 0, 15, 11, 17, 11, 16, 0, 13, 0, 15, 16, 0, 2],
+    [2, 0, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 0, 2],
+    [6, 1, 1, 5, 0, 18, 11, 16, 0, 14, 0, 15, 11, 20, 0, 4, 1, 1, 7],
+    [28, 28, 28, 2, 0, 12, 0, 0, 0, 0, 0, 0, 0, 12, 0, 2, 28, 28, 28],
+    [3, 1, 1, 7, 0, 14, 0, 4, 24, 28, 3, 5, 0, 14, 0, 6, 1, 1, 24],
+    [0, 0, 0, 0, 0, 0, 0, 2, 28, 28, 28, 2, 0, 0, 0, 0, 0, 0, 0],
+    [3, 1, 1, 5, 0, 13, 0, 6, 1, 1, 1, 7, 0, 13, 0, 4, 1, 1, 24],
+    [28, 28, 28, 2, 0, 12, 0, 0, 0, 0, 0, 0, 0, 12, 0, 2, 28, 28, 28],
+    [4, 1, 1, 7, 0, 14, 0, 15, 11, 17, 11, 16, 0, 14, 0, 6, 1, 1, 5],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [2, 0, 15, 25, 0, 15, 11, 16, 0, 14, 0, 15, 11, 16, 0, 26, 16, 0, 2],
+    [2, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 2],
+    [9, 16, 0, 14, 0, 13, 0, 15, 11, 17, 11, 16, 0, 13, 0, 14, 0, 15, 8],
+    [2, 0, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 12, 0, 0, 0, 0, 2],
+    [2, 0, 15, 11, 11, 19, 11, 16, 0, 14, 0, 15, 11, 19, 11, 11, 16, 0, 2],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+    [6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 7],
+]
 
-    console.log(map);
+var MapSpriteArray = new Array();
+let MapTexture = [];
+
 
 async function init(){
   
@@ -96,32 +100,77 @@ async function init(){
 
 
   game_main.appendChild(app.canvas);
-  let MapSpriteArray = [];
-  for (let i=0;i<= 26;i++){
+
+  //加载贴图
+  for (let i=0;i< 29;i++){
     const teture = await Assets.load(`./assets/map/map${i}.png`);
-    const tempSprite = new Sprite(teture);
-    MapSpriteArray.push(tempSprite);
+    MapTexture.push(teture);
   }
 
+  //拼接地图, 并生成精灵表
   for (let i=0;i<maps.length;i++){
+    let tempMapSpriteRows = [];
     for(let j=0;j<maps[0].length;j++){
-      const teture = await Assets.load(`./assets/map/map${maps[i][j]}.png`);
-      const tempSprite = new Sprite(teture);
+      
+      const tempSprite = new Sprite(MapTexture[maps[i][j]]);
+      tempMapSpriteRows.push(tempSprite);
       tempSprite.anchor.set(0.5);
       tempSprite.x = Mapstart[0] + j*25;
       tempSprite.y = Mapstart[1] + i*25;
-      app.stage.addChild(tempSprite);
+      app.stage.addChildAt(tempSprite, 0);
     }
+    MapSpriteArray.push(tempMapSpriteRows);
   }
 
-  
+  Assets.addBundle('fonts', [
+    {alias: 'bitmap', src: "./assets/font/bitt.ttf"}
+  ])
+
+  await Assets.loadBundle('fonts');
+
+  const text1 = new Text({ text: 'SCORE', style: { fontFamily: 'bitt', fontSize: 90, fill: "red"} })
+  text1.anchor.set(0.5);
+  text1.x = Mapstart[0] + 600;
+  text1.y = Mapstart[1];
+  app.stage.addChild(text1);
 
 
   await addCharacter();
-  addGhost();
+  //addGhost();
+
+  let text2 = new Text({ text: `${score}`, style: { fontFamily: 'bitt', fontSize: 90, fill: "white"} });
+
+  text2.anchor.set(0,0);
+  text2.x = Mapstart[0] + 540;
+  text2.y = Mapstart[1] + 10;
+  app.stage.addChild(text2);
 
 
+  app.ticker.add(() => {
 
+    text2.text = `${score}`;
+
+    let beanCeilx = Math.ceil((beanSpriteX - 12.5)/25);
+    let beanCeily = Math.ceil((beanSpriteY - 12.5)/25);
+    if(maps[beanCeily][beanCeilx] == 0){
+      GhostSpeed = 0.55;
+      app.stage.removeChild(MapSpriteArray[beanCeily][beanCeilx]);
+      const tempSprite = new Sprite(MapTexture[28]);
+      tempSprite.anchor.set(0.5);
+      tempSprite.x = Mapstart[0] + beanCeilx*25;
+      tempSprite.y = Mapstart[1] + beanCeily*25;
+      
+      app.stage.addChildAt(tempSprite, 1);
+      MapSpriteArray[beanCeily][beanCeilx] = tempSprite
+      maps[beanCeily][beanCeilx] = 28;
+      score++;
+
+    } else {
+      GhostSpeed = 0.45;
+    }
+
+
+  });
 
   
 
@@ -137,7 +186,7 @@ async function addCharacter(){
   app.stage.addChild(beanSprite);
   // 定义速度变量
 
-  let speed = 0.5;
+  let speed = 0.5
   let beandirection = 0;
   let beanflip = 0.5;
 
@@ -177,7 +226,7 @@ async function addCharacter(){
   let nowDirextion = 1;
   // 每一帧更新渲染
   app.ticker.add(() => {
-
+    // 地图边界
     if(beanSprite.x > Mapstart[0] + 18*25){
       beanSprite.x = Mapstart[0];
     }
@@ -254,14 +303,16 @@ async function addCharacter(){
     if (((beanSprite.x - Mapstart[0])%25 == 0) && ((beanSprite.y - Mapstart[1])%25 == 0)){
           nowDirextion = nextDirection;
     }
-    beanx =  Math.floor((beanSprite.x - Mapstart[0])/25);
-    beany = Math.floor((beanSprite.y - Mapstart[0])/25);
+    beanLocx =  Math.floor((beanSprite.x - Mapstart[0])/25);
+    beanLocy = Math.floor((beanSprite.y - Mapstart[1])/25);
+    beanSpriteX = beanSprite.x - Mapstart[0];
+    beanSpriteY = beanSprite.y - Mapstart[1];
   });
 }
 
 
-let GhostSpeed = 0.5;
-let accumulator = 0;
+
+
 async function addGhost(){
 
   let blueGhostImages = ["./assets/ghost-blue/ghost1.png", "./assets/ghost-blue/ghost2.png", "./assets/ghost-blue/ghost3.png"];
@@ -273,63 +324,83 @@ async function addGhost(){
   let greenGhost = await CreateAnimatedSprite(greenGhostImages);
   let pinkGhost = await CreateAnimatedSprite(pinkGhostImages);
   let redGhost = await CreateAnimatedSprite(redGhostImages);
-  SpriteInit(blueGhost);
-  SpriteInit(greenGhost);
-  SpriteInit(pinkGhost);
-  SpriteInit(redGhost);
-  setSpritePosition(blueGhost, [Mapstart[0] + 25*8, Mapstart[1] + 25*9]);
-  setSpritePosition(greenGhost, [Mapstart[0] + 25*9, Mapstart[1] + 25*9]);
-  setSpritePosition(pinkGhost, [Mapstart[0] + 25*10, Mapstart[1] + 25*9]);
-  setSpritePosition(redGhost, [Mapstart[0] + 25*9, Mapstart[1] + 25*8]);
-  blueGhost.play();
-  greenGhost.play();
-  pinkGhost.play();
-  redGhost.play();
-  app.stage.addChild(blueGhost);
-  app.stage.addChild(greenGhost);
-  app.stage.addChild(pinkGhost);
-  app.stage.addChild(redGhost);
-
-  let road = astar([9,8],[beanx,beany], map);
-  console.log(road);
-
-  let i = 0;
-  let redGhostx = 0;
-  let redGhosty = 0;
-  app.ticker.add((deltaTime) =>{
-   
-    
-    redGhostx = redGhost.x-Mapstart[0]
-    redGhosty = redGhost.y-Mapstart[1];
-
-    let nextPosition = road[i];
-
-
-
-    if((redGhostx != nextPosition[0]*25) || (redGhosty != nextPosition[1]*25)){
-      if(nextPosition[0]*25 - redGhostx > 0){
-        redGhost.x += GhostSpeed;
-      } else if(nextPosition[0]*25 - redGhostx < 0){
-        redGhost.x -= GhostSpeed;
-      } else if(nextPosition[1]*25 - redGhosty > 0){
-        redGhost.y += GhostSpeed;
-      } else if(nextPosition[1]*25 - redGhosty < 0){
-        redGhost.y -= GhostSpeed;
-      }
-    } else {
-      if(i < road.length-1){
-        i = i + 1;
-      } else {
-        let currentGoastx = Math.floor(redGhostx/25);
-        let currentGoasty = Math.floor(redGhosty/25);
-        console.log([[currentGoastx,currentGoasty],[beanx,beany]])
-        road = astar([currentGoastx,currentGoasty],[beanx,beany], map);
-        console.log(road);
-        i = 0;
-      }
-    }
+  let GhostSpriteArray = [blueGhost, greenGhost, pinkGhost, redGhost];
 
   
+  let GhostInitPosition = [[8,9] , [9,9], [10,9], [9,8]]
+  GhostSpriteArray.forEach((item, index) => {
+    SpriteInit(item);
+    setSpritePosition(item, [Mapstart[0] +GhostInitPosition[index][0]*25, Mapstart[1] +GhostInitPosition[index][1]*25])
+    item.play();
+    app.stage.addChild(item);
+
+    
+  });
+  let ghostFirstTarget = [[4,9], [4, 13], [13, 9], [13,13]];
+  let roadArray = [];
+  GhostInitPosition.forEach((item, index)=>{
+    let road = astar(item,ghostFirstTarget[index], map);
+    roadArray.push(road)
+  });
+
+
+  
+
+
+
+
+  let iArray = [0, 0, 0, 0];
+  let CurrentGhostPosition = [0, 0, 0, 0];
+
+  app.ticker.add(() =>{
+
+    GhostSpriteArray.forEach((item, index) => {
+      let tempGhostX = item.x - Mapstart[0];
+      let tempGhostY = item.y - Mapstart[1];
+      let currentGoastx = Math.floor(tempGhostX/25);
+      let currentGoasty = Math.floor(tempGhostY/25);
+      CurrentGhostPosition[index] = [currentGoastx, currentGoasty];
+  })
+
+
+   
+    iArray.forEach((item, index) => {
+      
+      let tempGhost = GhostSpriteArray[index];
+      
+      let tempGhostX = tempGhost.x - Mapstart[0];
+      let tempGhostY = tempGhost.y - Mapstart[1];
+      let currentGoastx = Math.floor(tempGhostX/25);
+      let currentGoasty = Math.floor(tempGhostY/25);
+      let nextPosition = roadArray[index][iArray[index]];
+
+
+      if((Math.floor(tempGhostX) != nextPosition[0]*25) || (Math.floor(tempGhostY) != nextPosition[1]*25)){
+
+        if(nextPosition[0]*25 - tempGhostX > 0){
+          tempGhost.x += GhostSpeed;
+        } else if(nextPosition[0]*25 - tempGhostX < 0){
+          tempGhost.x -= GhostSpeed;
+        } else if(nextPosition[1]*25 - tempGhostY > 0){
+          tempGhost.y += GhostSpeed;
+        } else if(nextPosition[1]*25 - tempGhostY < 0){
+          tempGhost.y -= GhostSpeed;
+        }
+      } else {
+
+        if(iArray[index] < Math.ceil(roadArray[index].length - 1)/1.5){
+
+          tempGhost.x = nextPosition[0]*25 + Mapstart[0];
+          tempGhost.y = nextPosition[1]*25 + Mapstart[1];
+            iArray[index] = iArray[index] + 1;
+
+
+        } else {
+          roadArray[index] = astar([currentGoastx,currentGoasty],[beanLocx,beanLocy], map);
+          iArray[index] = 0;
+        }
+      }
+    })
 
   
   
@@ -356,7 +427,12 @@ async function CreateAnimatedSprite(sources){
   return new AnimatedSprite(tempTextureArray);
 }
 
+function hitTestRectangle(spriteA, spriteB) {
+    var boundsA = spriteA.getBounds();
+    var boundsB = spriteB.getBounds();
 
+    return boundsA.intersects(boundsB);
+}
 
 
 
